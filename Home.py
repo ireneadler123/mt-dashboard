@@ -452,7 +452,7 @@ elif pages == 'Tăng trưởng lũy kế':
     middle, middlee, middleee = st.columns(3)
     with middlee:
         if kind == 'QTD - YOY %':
-            df_past = df[(df['Ngày lấy đơn'].astype('datetime64') >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64')) <= (date2 - timedelta(days = 365)))]
+            df_past = df[(df['Ngày lấy đơn'].astype('datetime64[ns]') >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64[ns]')) <= (date2 - timedelta(days = 365)))]
             df_past = df_past[df_past['Loại đơn'] == 'Đơn bán']
             df_past = df_past[df_past['Loại đơn'] == 'Đơn bán']
             delta = (df1['Thành tiền'].sum() - df_past['Thành tiền'].sum()) / df_past['Thành tiền'].sum() 
@@ -463,7 +463,7 @@ elif pages == 'Tăng trưởng lũy kế':
 
     with col5:
         if kind == 'QTD - YOY %':
-            df_past = df[(df['Ngày lấy đơn'].astype('datetime64') >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64')) <= (date2 - timedelta(days = 365)))]
+            df_past = df[(df['Ngày lấy đơn'].astype('datetime64[ns]') >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64[ns]')) <= (date2 - timedelta(days = 365)))]
             df_past = df_past[df_past['Loại đơn'] == 'Đơn bán']
             df_past['Hệ thống'] = df_past['Tên KH'].str.split(' ')
             df_past['Hệ thống'] = df_past['Hệ thống'].agg({lambda x: x[0]})
