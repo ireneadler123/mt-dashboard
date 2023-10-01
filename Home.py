@@ -586,5 +586,5 @@ elif pages == 'Tăng trưởng lũy kế':
         flavor2 = flavor2.rename(columns = {'Hàng bán (Thùng)': 'Hàng bán'})
         flavor3 = flavor1.set_index('Hương vị').join(flavor2.set_index('Hương vị')).reset_index()
         flavor3['Tăng trưởng (%)'] = (flavor3['Hàng bán (Thùng)'] - flavor3['Hàng bán']) / flavor3['Hàng bán']
-        lineFlavor = px.bar(flavor3, x = flavor3['Hương vị'], y = flavor3['Tăng trưởng (%)'])
+        lineFlavor = px.bar(flavor3, x = flavor3['Hương vị'], y = flavor3['Tăng trưởng (%)'], title = 'Tăng trưởng theo hương vị (%)')
         st.plotly_chart(lineFlavor, use_container_width = True, height = 300)
