@@ -3,14 +3,26 @@ import numpy as np
 import streamlit as st
 import plotly.express as px
 import os
+import matplotlib.pyplot as plt
 import warnings
+from datetime import datetime, timedelta
 warnings.filterwarnings('ignore')
 
 st.set_page_config(page_title = 'Dashboard', layout = 'wide', page_icon = ':trophy:')
+st.sidebar.image('images/logo-vinasoy.png')
 st.sidebar.title('MY DASHBOARD')
 
-upload = st.file_uploader('Upload your file here: ', ['csv'])
-pages = st.sidebar.selectbox('Chọn trang: ', ['Tổng quan', 'Tăng trưởng'])
+st.markdown('''
+                <style>
+                    body{
+                        font-family: calibri;
+                        background-color: yellow;
+                    }
+                </style>
+            ''', unsafe_allow_html = True)
+
+upload = st.file_uploader(' ', ['csv'])
+pages = st.sidebar.selectbox('Chọn trang: ', ['Tổng quan', 'Tăng trưởng', 'Tăng trưởng lũy kế'])
 if pages ==  'Tổng quan':
 
 
@@ -118,7 +130,7 @@ if pages ==  'Tổng quan':
         barChartSkus = px.bar(skus, y = skus['Tên sản phẩm'], x = skus['Hàng bán (Thùng)'], title = 'Sản lượng bán ra theo SKUs', orientation = 'h')
         st.plotly_chart(barChartSkus, use_container_width = True, height = 1000)
     else:
-        st.warning('Please upload your file to continue!')
+        st.warning('Tải file có tên Vinasoy.csv vào đây để tiếp tục nhé')
 ###################################################################################################################################################################        
 ###################################################################################################################################################################        
 ###################################################################################################################################################################         
@@ -394,5 +406,186 @@ elif pages == 'Tăng trưởng':
     st.subheader('Tăng trưởng theo nhóm sản phẩm')
     barChart_growth = px.bar(flavors_growth, x = flavors_growth['Hương vị'], y = flavors_growth['Tăng trưởng (%)'])
     st.plotly_chart(barChart_growth, use_container_width = True, height = 200)
-else:
-    st.error('Chưa có dữ liệu')
+
+elif pages == 'Tăng trưởng lũy kế':
+
+    df = pd.read_csv('dataset/Vinasoy.csv')
+
+    col1, col2, col3 = st.columns((3))
+
+    df['Ngày lấy đơn'] = pd.to_datetime(df['Ngày lấy đơn'], dayfirst = True)
+
+    startDate = (pd.to_datetime(df['Ngày lấy đơn'], dayfirst = True)).min()
+    endDate = (pd.to_datetime(df['Ngày lấy đơn'], dayfirst = True)).max()
+
+    with col1:
+        date1 = pd.to_datetime(st.date_input('Từ ngày: ', startDate), dayfirst = True)
+
+    with col2:
+        kinds = ['QTD - YOY %','YTD - YOY %']
+        kind = st.selectbox('Chọn kiểu so sánh: ', kinds)
+
+    with col3:
+        date2 = pd.to_datetime(st.date_input('Đến ngày: ', endDate), dayfirst = True)
+    df1 = df[(df['Ngày lấy đơn'] >= date1) & (df['Ngày lấy đơn'] <= date2)].copy()
+
+    df1['Mã NV'] = df1['Mã NV'].astype('str')
+    df1['Mã NPP'] = df1['Mã NPP'].astype('str')
+    df1['Hệ thống'] = df1['Tên KH'].str.split(' ')
+    df1['Hệ thống'] = df1['Hệ thống'].agg({lambda x: x[0]})
+    df1['Hệ thống'] = df1['Hệ thống'].map({
+        'VMP': 'Vincommerce',
+        'VM': 'Vincommerce',
+        'BHX': 'Bách Hóa Xanh',
+        'Lotte': 'Lotte mart',
+        'MM': 'Mega Market',
+        'Coopmart': 'Sài Gòn Coop',
+        'Coopfood': 'Sài Gòn Coop',
+        'BigC': 'BigC và Go!',
+        'CK': 'Circle K',
+        'FM': 'Family Mart',
+        'MN': 'Ministop',
+        'GS25': 'GS25',
+    })
+    df1['Ngày lấy đơn'] = df1['Ngày lấy đơn'].astype('str').str.split(' ')
+    df1['Ngày lấy đơn'] = df1['Ngày lấy đơn'].agg({lambda x: x[0]})
+    df1 = df1[df1['Loại đơn'] == 'Đơn bán']
+    middle, middlee, middleee = st.columns(3)
+    with middlee:
+        if kind == 'QTD - YOY %':
+            df_past = df[(df['Ngày lấy đơn'].astype('datetime64') >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64')) <= (date2 - timedelta(days = 365)))]
+            df_past = df_past[df_past['Loại đơn'] == 'Đơn bán']
+            df_past = df_past[df_past['Loại đơn'] == 'Đơn bán']
+            delta = (df1['Thành tiền'].sum() - df_past['Thành tiền'].sum()) / df_past['Thành tiền'].sum() 
+            st.metric(label = 'Tổng doanh số', value = format(round(df1['Thành tiền'].sum(), 2), ','), delta = format(delta, '.2%'))
+    col5, col6 = st.columns(2)
+    groupby = [df1.columns[1], df1.columns[2], df1.columns[3], df1.columns[5], df1.columns[7], df1.columns[3], df1.columns[17],  df1.columns[18], df1.columns[30]]
+    group = st.sidebar.selectbox('Chọn một mục để so sánh: ', groupby)
+
+    with col5:
+        if kind == 'QTD - YOY %':
+            df_past = df[(df['Ngày lấy đơn'].astype('datetime64') >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64')) <= (date2 - timedelta(days = 365)))]
+            df_past = df_past[df_past['Loại đơn'] == 'Đơn bán']
+            df_past['Hệ thống'] = df_past['Tên KH'].str.split(' ')
+            df_past['Hệ thống'] = df_past['Hệ thống'].agg({lambda x: x[0]})
+            df_past['Hệ thống'] = df_past['Hệ thống'].map({
+                'VMP': 'Vincommerce',
+                'VM': 'Vincommerce',
+                'BHX': 'Bách Hóa Xanh',
+                'Lotte': 'Lotte mart',
+                'MM': 'Mega Market',
+                'Coopmart': 'Sài Gòn Coop',
+                'Coopfood': 'Sài Gòn Coop',
+                'BigC': 'BigC và Go!',
+                'CK': 'Circle K',
+                'FM': 'Family Mart',
+                'MN': 'Ministop',
+                'GS25': 'GS25',
+            })
+            df_past['Ngày lấy đơn'] = df_past['Ngày lấy đơn'].astype('str').str.split(' ')
+            df_past['Ngày lấy đơn'] = df_past['Ngày lấy đơn'].agg({lambda x: x[0]})
+            if group == 'Ngày lấy đơn':
+                compared = df_past.groupby(by = 'Ngày lấy đơn').agg({'Thành tiền': 'sum'}).reset_index()
+                lineChart_now = px.line(compared,y = compared['Thành tiền'], x = compared['Ngày lấy đơn'], title = 'Quá khứ')
+                st.plotly_chart(lineChart_now, use_container_width = True)
+            elif group == 'Tên sản phẩm':
+                compared = df_past.groupby(by = 'Tên sản phẩm').agg({'Hàng bán (Thùng)': 'sum'}).reset_index()
+                compared = compared.sort_values('Hàng bán (Thùng)', ascending = False)
+                barChart_now = px.bar(compared,y = compared['Hàng bán (Thùng)'], x = compared['Tên sản phẩm'], title = 'Quá khứ')
+                st.plotly_chart(barChart_now, use_container_width = True)
+            else:    
+                compared = df_past.groupby(by = group).agg({'Thành tiền': 'sum'}).reset_index()
+                pieChart_past = px.pie(compared,values = compared['Thành tiền'], names = compared[group], title = 'Quá khứ')
+                st.plotly_chart(pieChart_past, use_container_width = True)
+
+    with col6:
+        if kind == 'QTD - YOY %':
+            if group == 'Ngày lấy đơn':
+                compared = df1.groupby(by = 'Ngày lấy đơn').agg({'Thành tiền': 'sum'}).reset_index()
+                barChart_now = px.line(compared,y = compared['Thành tiền'], x = compared['Ngày lấy đơn'], title = 'Hiện tại')
+                st.plotly_chart(barChart_now, use_container_width = True)
+            elif group == 'Tên sản phẩm':
+                compared = df1.groupby(by = 'Tên sản phẩm').agg({'Hàng bán (Thùng)': 'sum'}).reset_index()
+                compared = compared.sort_values('Hàng bán (Thùng)', ascending = False)
+                barChart_now = px.bar(compared,y = compared['Hàng bán (Thùng)'], x = compared['Tên sản phẩm'], title = 'Hiện tại')
+                st.plotly_chart(barChart_now, use_container_width = True)
+            else:    
+                df1['Ngày lấy đơn'] = df1['Ngày lấy đơn'].astype('str').str.split(' ')
+                df1['Ngày lấy đơn'] = df1['Ngày lấy đơn'].agg({lambda x: x[0]})
+                compared = df1.groupby(by = group).agg({'Thành tiền': 'sum'}).reset_index()
+                pieChart_now = px.pie(compared,values = compared['Thành tiền'], names = compared[group], title = 'Hiện tại')
+                st.plotly_chart(pieChart_now, use_container_width = True)
+
+
+    if kind == 'QTD - YOY %':
+        df_past['Hương vị'] = df_past['Tên sản phẩm'].map({
+            'Fa.36h': 'Nguyên chất',
+            'Fl.36h': 'Nguyên chất',
+            'Fa.10h': 'Nguyên chất',
+            'Ca.10h': 'Canxi',
+            'Fa.40b': 'Nguyên chất',
+            'Fl.40b': 'Nguyên chất',
+            'Ft.36h': 'Nguyên chất',
+            'Fc.36h': 'Nguyên chất',
+            'Fc.40b': 'Nguyên chất',
+            'Fs.36h': 'Nguyên chất',
+            'Fs.40b': 'Nguyên chất',
+            'Fg.36h': 'Nguyên chất',
+            'Ca.36h': 'Canxi',
+            'Ca.40b': 'Canxi',
+            'Cl.36h': 'Canxi',
+            'Cl.40b': 'Canxi',
+            'Cf.36h': 'Canxi',
+            'Ch.36h': 'Canxi',
+            'Cs.36h': 'Canxi',
+            'Cp.36h': 'Canxi',
+            'Cp.40b': 'Canxi',
+            'Ct.36h': 'Canxi',
+            'Ct.40b': 'Canxi',
+            'Fd.36h': 'Khác',
+            'Fd.40b': 'Khác',
+            'Fm.36h': 'Khác',
+            'Fm.40b': 'Khác',
+            'Vo.30h': 'Sữa chua uống',
+            'Vs.30h': 'Sữa chua uống',
+            'Vp.30h': 'Sữa chua uống',
+        })
+        df1['Hương vị'] = df1['Tên sản phẩm'].map({
+            'Fa.36h': 'Nguyên chất',
+            'Fl.36h': 'Nguyên chất',
+            'Fa.10h': 'Nguyên chất',
+            'Ca.10h': 'Canxi',
+            'Fa.40b': 'Nguyên chất',
+            'Fl.40b': 'Nguyên chất',
+            'Ft.36h': 'Nguyên chất',
+            'Fc.36h': 'Nguyên chất',
+            'Fc.40b': 'Nguyên chất',
+            'Fs.36h': 'Nguyên chất',
+            'Fs.40b': 'Nguyên chất',
+            'Fg.36h': 'Nguyên chất',
+            'Ca.36h': 'Canxi',
+            'Ca.40b': 'Canxi',
+            'Cl.36h': 'Canxi',
+            'Cl.40b': 'Canxi',
+            'Cf.36h': 'Canxi',
+            'Ch.36h': 'Canxi',
+            'Cs.36h': 'Canxi',
+            'Cp.36h': 'Canxi',
+            'Cp.40b': 'Canxi',
+            'Ct.36h': 'Canxi',
+            'Ct.40b': 'Canxi',
+            'Fd.36h': 'Khác',
+            'Fd.40b': 'Khác',
+            'Fm.36h': 'Khác',
+            'Fm.40b': 'Khác',
+            'Vo.30h': 'Sữa chua uống',
+            'Vs.30h': 'Sữa chua uống',
+            'Vp.30h': 'Sữa chua uống',
+        })
+        flavor1 = df1.groupby(by = 'Hương vị').agg({'Hàng bán (Thùng)': 'sum'}).reset_index()
+        flavor2 = df_past.groupby(by = 'Hương vị').agg({'Hàng bán (Thùng)': 'sum'}).reset_index()
+        flavor2 = flavor2.rename(columns = {'Hàng bán (Thùng)': 'Hàng bán'})
+        flavor3 = flavor1.set_index('Hương vị').join(flavor2.set_index('Hương vị')).reset_index()
+        flavor3['Tăng trưởng (%)'] = (flavor3['Hàng bán (Thùng)'] - flavor3['Hàng bán']) / flavor3['Hàng bán']
+        lineFlavor = px.bar(flavor3, x = flavor3['Hương vị'], y = flavor3['Tăng trưởng (%)'])
+        st.plotly_chart(lineFlavor, use_container_width = True, height = 300)
