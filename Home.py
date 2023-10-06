@@ -20,16 +20,16 @@ st.markdown('''
                 </style>
             ''', unsafe_allow_html = True)
 
-upload = st.file_uploader(' ', ['xlsx'])
+upload = st.file_uploader(' ', ['csv'])
 pages = st.sidebar.selectbox('Chọn trang: ', ['Tổng quan', 'Tăng trưởng', 'Tăng trưởng lũy kế'])
 if pages ==  'Tổng quan':
 
 
     if upload:
-        df = pd.read_exel(upload, skiprows=1)
+        new_df = pd.read_csv(upload)
         os.makedirs('dataset', exist_ok=True) 
         df.to_csv('dataset/' + upload.name, index = False, encoding = 'utf-8')
-        new_df = pd.read_csv('dataset/' + upload.name)
+        df = pd.read_csv('dataset/' + upload.name)
         # st.write(new_df)
 
         col1, col2 = st.columns((2))
