@@ -20,7 +20,7 @@ st.markdown('''
                 </style>
             ''', unsafe_allow_html = True)
 
-upload = st.file_uploader(' ', ['xlsm'])
+upload = st.file_uploader(' ', ['xlsx'])
 pages = st.sidebar.selectbox('Chọn trang: ', ['Tổng quan', 'Tăng trưởng', 'Tăng trưởng lũy kế'])
 if pages ==  'Tổng quan':
 
