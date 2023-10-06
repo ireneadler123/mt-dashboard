@@ -3,6 +3,7 @@ import numpy as np
 import streamlit as st
 import plotly.express as px
 import os
+import matplotlib.pyplot as plt
 import warnings
 from datetime import datetime, timedelta
 warnings.filterwarnings('ignore')
@@ -190,7 +191,7 @@ elif pages == 'Tăng trưởng':
         growth_month = st.selectbox('Chọn tháng so sánh: ', df['Tháng - năm'].sort_values(ascending = True).unique())
 
     systems = st.sidebar.selectbox('Chọn hệ thống: ', df['Hệ thống'].sort_values(ascending = True).unique())
-
+    # names = st.sidebar.selectbox('Chọn hệ thống: ', df['Tên KH'].sort_values(ascending = True).unique())
     df_system = df[df['Tháng - năm'] == months]
     df_system = df_system[df_system['Hệ thống'] == systems]
 
@@ -405,7 +406,9 @@ elif pages == 'Tăng trưởng':
     st.subheader('Tăng trưởng theo nhóm sản phẩm')
     barChart_growth = px.bar(flavors_growth, x = flavors_growth['Hương vị'], y = flavors_growth['Tăng trưởng (%)'])
     st.plotly_chart(barChart_growth, use_container_width = True, height = 200)
-
+###########################################################################################################################################################################
+###########################################################################################################################################################################
+###########################################################################################################################################################################
 elif pages == 'Tăng trưởng lũy kế':
 
     df = pd.read_csv('dataset/Vinasoy.csv')
@@ -446,12 +449,36 @@ elif pages == 'Tăng trưởng lũy kế':
         'MN': 'Ministop',
         'GS25': 'GS25',
     })
+    
+    supermarket = st.sidebar.selectbox('Các hệ thống siêu thị: ', df1['Hệ thống'].unique())
+    
+    df1 = df1[df1['Hệ thống'] == supermarket]
     df1['Ngày lấy đơn'] = df1['Ngày lấy đơn'].astype('str').str.split(' ')
     df1['Ngày lấy đơn'] = df1['Ngày lấy đơn'].agg({lambda x: x[0]})
     df1 = df1[df1['Loại đơn'] == 'Đơn bán']
     middle, middlee, middleee = st.columns(3)
+    with middle:
+        if kind == 'QTD - YOY %':
+            df_past = df1[df1['Hệ thống'] == supermarket]
+            df_past = df[(df['Ngày lấy đơn'].astype('datetime64[ns]') >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64[ns]')) <= (date2 - timedelta(days = 365)))]
+            df_past['Ngày lấy đơn'] = df_past['Ngày lấy đơn'].astype('str').str.split(' ')
+            df_past['Ngày lấy đơn'] = df_past['Ngày lấy đơn'].agg({lambda x: x[0]})
+            quality = df1[(pd.to_datetime(df1['Ngày lấy đơn'], dayfirst = True) >= date1) & (pd.to_datetime(df1['Ngày lấy đơn'], dayfirst = True) <= date2)].copy()
+            quality = df1.groupby(by = 'Mã đơn hàng').agg({'Hàng bán (Thùng)': 'sum'}).reset_index()
+            quantity = quality['Mã đơn hàng'].count()
+            quality_order = round(quality['Hàng bán (Thùng)'].sum() / quantity, 2)
+
+            quality2 = df_past.groupby(by = 'Mã đơn hàng').agg({'Hàng bán (Thùng)': 'sum'}).reset_index()
+            quantity2 = quality2['Mã đơn hàng'].count()
+            quality_order2 = round(quality2['Hàng bán (Thùng)'].sum() / quantity2, 2)
+
+            quality_order_growth = (quality_order - quality_order2) / quality_order2
+
+            st.metric(label = 'Chất lượng đơn hàng ' + ' (Thùng/đơn)', value = quality_order , delta = format(round(quality_order_growth, 2), '.2%'))
+
     with middlee:
         if kind == 'QTD - YOY %':
+            df_past = df1[df1['Hệ thống'] == supermarket]
             df_past = df[(df['Ngày lấy đơn'].astype('datetime64[ns]') >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64[ns]')) <= (date2 - timedelta(days = 365)))]
             df_past = df_past[df_past['Loại đơn'] == 'Đơn bán']
             df_past = df_past[df_past['Loại đơn'] == 'Đơn bán']
@@ -460,6 +487,10 @@ elif pages == 'Tăng trưởng lũy kế':
     col5, col6 = st.columns(2)
     groupby = [df1.columns[1], df1.columns[2], df1.columns[3], df1.columns[5], df1.columns[7], df1.columns[3], df1.columns[17],  df1.columns[18], df1.columns[30]]
     group = st.sidebar.selectbox('Chọn một mục để so sánh: ', groupby)
+
+    with middleee:
+        quan_final = (quantity - quantity2) / quantity2
+        st.metric(label = 'Đơn hàng thành công ' + ' (Đơn)', value = quantity, delta = format(round(quan_final, 2), '.2%'))
 
     with col5:
         if kind == 'QTD - YOY %':
@@ -481,6 +512,7 @@ elif pages == 'Tăng trưởng lũy kế':
                 'MN': 'Ministop',
                 'GS25': 'GS25',
             })
+            df_past = df_past[df_past['Hệ thống'] == supermarket]
             df_past['Ngày lấy đơn'] = df_past['Ngày lấy đơn'].astype('str').str.split(' ')
             df_past['Ngày lấy đơn'] = df_past['Ngày lấy đơn'].agg({lambda x: x[0]})
             if group == 'Ngày lấy đơn':
@@ -492,7 +524,7 @@ elif pages == 'Tăng trưởng lũy kế':
                 compared = compared.sort_values('Hàng bán (Thùng)', ascending = False)
                 barChart_now = px.bar(compared,y = compared['Hàng bán (Thùng)'], x = compared['Tên sản phẩm'], title = 'Quá khứ')
                 st.plotly_chart(barChart_now, use_container_width = True)
-            else:    
+            else:
                 compared = df_past.groupby(by = group).agg({'Thành tiền': 'sum'}).reset_index()
                 pieChart_past = px.pie(compared,values = compared['Thành tiền'], names = compared[group], title = 'Quá khứ')
                 st.plotly_chart(pieChart_past, use_container_width = True)
@@ -582,6 +614,7 @@ elif pages == 'Tăng trưởng lũy kế':
             'Vp.30h': 'Sữa chua uống',
         })
         flavor1 = df1.groupby(by = 'Hương vị').agg({'Hàng bán (Thùng)': 'sum'}).reset_index()
+        df_past = df_past[df_past['Hệ thống'] == supermarket]
         flavor2 = df_past.groupby(by = 'Hương vị').agg({'Hàng bán (Thùng)': 'sum'}).reset_index()
         flavor2 = flavor2.rename(columns = {'Hàng bán (Thùng)': 'Hàng bán'})
         flavor3 = flavor1.set_index('Hương vị').join(flavor2.set_index('Hương vị')).reset_index()
