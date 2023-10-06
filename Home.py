@@ -3,6 +3,7 @@ import numpy as np
 import streamlit as st
 import plotly.express as px
 import os
+import matplotlib.pyplot as plt
 import warnings
 from datetime import datetime, timedelta
 warnings.filterwarnings('ignore')
