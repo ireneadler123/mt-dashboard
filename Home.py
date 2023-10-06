@@ -28,7 +28,7 @@ if pages ==  'Tổng quan':
     if upload:
         new_df = pd.read_csv(upload)
         os.makedirs('dataset', exist_ok=True) 
-        df.to_csv('dataset/' + upload.name, index = False, encoding = 'utf-8')
+        new_df.to_csv('dataset/' + upload.name, index = False, encoding = 'utf-8')
         df = pd.read_csv('dataset/' + upload.name)
         # st.write(new_df)
 
