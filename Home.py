@@ -26,7 +26,7 @@ if pages ==  'Tổng quan':
 
 
     if upload:
-        df = pd.read_exel(upload)
+        df = pd.read_exel(upload, skiprows=1)
         os.makedirs('dataset', exist_ok=True) 
         df.to_csv('dataset/' + upload.name, index = False, encoding = 'utf-8')
         new_df = pd.read_csv('dataset/' + upload.name)
