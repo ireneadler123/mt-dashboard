@@ -3,6 +3,7 @@ import numpy as np
 import streamlit as st
 import plotly.express as px
 import os
+import matplotlib.pyplot as plt
 import warnings
 from datetime import datetime, timedelta
 warnings.filterwarnings('ignore')
@@ -26,10 +27,10 @@ if pages ==  'Tổng quan':
 
 
     if upload:
-        new_df = pd.read_csv(upload)
+        df = pd.read_csv(upload)
         os.makedirs('dataset', exist_ok=True) 
-        new_df.to_csv('dataset/' + upload.name, index = False, encoding = 'utf-8')
-        df = pd.read_csv('dataset/' + upload.name)
+        df.to_csv('dataset/' + upload.name, index = False, encoding = 'utf-8')
+        new_df = pd.read_csv('dataset/' + upload.name)
         # st.write(new_df)
 
         col1, col2 = st.columns((2))
