@@ -490,7 +490,7 @@ elif pages == 'Tăng trưởng lũy kế':
 
     with middleee:
         quan_final = (quantity - quantity2) / quantity2
-        st.metric(label = 'Đơn hàng thành công ' + ' (Đơn)', value = quantity, delta = format(round(quan_final, 2), '.2%'))
+        st.metric(label = 'Đơn hàng thành công ' + ' (Đơn)', value = quantity.astype('float64'), delta = format(round(quan_final, 2), '.2%'))
 
     ###################################
     df_super = df1.groupby('Hệ thống').agg({'Thành tiền': 'sum'}).reset_index()
