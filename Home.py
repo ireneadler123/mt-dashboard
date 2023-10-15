@@ -460,7 +460,7 @@ elif pages == 'Tăng trưởng lũy kế':
     with middle:
         if kind == 'QTD - YOY %':
             # df_past = df1[df1['Hệ thống'] == supermarket]
-            df_past = df[(pd.to_datetime(df['Ngày lấy đơn'], dayfirst = True) >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'], dayfirst = True) <= (date2 - timedelta(days = 365)))]
+            df_past = df[(pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64[ns]'), dayfirst = True) >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64[ns]'), dayfirst = True) <= (date2 - timedelta(days = 365)))]
             df_past['Ngày lấy đơn'] = df_past['Ngày lấy đơn'].astype('str').str.split(' ')
             df_past['Ngày lấy đơn'] = df_past['Ngày lấy đơn'].agg({lambda x: x[0]})
             quality = df1[(pd.to_datetime(df1['Ngày lấy đơn'].astype('datetime64[ns]'), dayfirst = True) >= date1) & (pd.to_datetime(df1['Ngày lấy đơn'].astype('datetime64[ns]'), dayfirst = True) <= date2)].copy()
@@ -492,41 +492,7 @@ elif pages == 'Tăng trưởng lũy kế':
         quan_final = (quantity - quantity2) / quantity2
         st.metric(label = 'Đơn hàng thành công ' + ' (Đơn)', value = quantity.astype('float64'), delta = format(round(quan_final, 2), '.2%'))
 
-    ###################################
-    df_super = df1.groupby('Hệ thống').agg({'Thành tiền': 'sum'}).reset_index()
-    df_super = df_super.rename(columns = {'Thành tiền': 'Thành tiền (hiện tại)'})
     
-    df_super_past = df[(df['Ngày lấy đơn'].astype('datetime64[ns]') >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64[ns]')) <= (date2 - timedelta(days = 365)))]
-    df_super_past = df_super_past[df_super_past['Loại đơn'] == 'Đơn bán']
-    df_super_past['Hệ thống'] = df_super_past['Tên KH'].str.split(' ')
-    df_super_past['Hệ thống'] = df_super_past['Hệ thống'].agg({lambda x: x[0]})
-    df_super_past['Hệ thống'] = df_super_past['Hệ thống'].map({
-                'VMP': 'Vincommerce',
-                'VM': 'Vincommerce',
-                'BHX': 'Bách Hóa Xanh',
-                'Lotte': 'Lotte mart',
-                'MM': 'Mega Market',
-                'Coopmart': 'Sài Gòn Coop',
-                'Coopfood': 'Sài Gòn Coop',
-                'BigC': 'BigC và Go!',
-                'CK': 'Circle K',
-                'FM': 'Family Mart',
-                'MN': 'Ministop',
-                'GS25': 'GS25',
-            })
-    df_super_past = df_super_past.groupby('Hệ thống').agg({'Thành tiền': 'sum'}).reset_index()
-    df_super_past = df_super_past.rename(columns = {'Thành tiền': 'Thành tiền (quá khứ)'})
-
-    df_supermarket = df_super.set_index('Hệ thống').join(df_super_past.set_index('Hệ thống')).reset_index()
-    df_supermarket['Tăng trưởng'] = (df_supermarket['Thành tiền (hiện tại)'] - df_supermarket['Thành tiền (quá khứ)']) / df_supermarket['Thành tiền (quá khứ)']
-    df_supermarket['Tăng trưởng'] = round(df_supermarket['Tăng trưởng'], 2) * 100
-    st.table(df_supermarket)
-    barSuper = px.bar(df_supermarket, x = df_supermarket['Hệ thống'], y = df_supermarket['Tăng trưởng'])
-    st.plotly_chart(barSuper, use_container_width = True)
-
-
-
-    ##################################
     with col5:
         if kind == 'QTD - YOY %':
             df_past = df[(df['Ngày lấy đơn'].astype('datetime64[ns]') >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64[ns]')) <= (date2 - timedelta(days = 365)))]
@@ -657,5 +623,39 @@ elif pages == 'Tăng trưởng lũy kế':
         lineFlavor = px.bar(flavor3, x = flavor3['Hương vị'], y = flavor3['Tăng trưởng (%)'], title = 'Tăng trưởng theo hương vị (%)')
         st.plotly_chart(lineFlavor, use_container_width = True, height = 300)
 
+        ###################################
+        df_super = df1.groupby('Hệ thống').agg({'Thành tiền': 'sum'}).reset_index()
+        df_super = df_super.rename(columns = {'Thành tiền': 'Thành tiền (hiện tại)'})
+        
+        df_super_past = df[(df['Ngày lấy đơn'].astype('datetime64[ns]') >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64[ns]')) <= (date2 - timedelta(days = 365)))]
+        df_super_past = df_super_past[df_super_past['Loại đơn'] == 'Đơn bán']
+        df_super_past['Hệ thống'] = df_super_past['Tên KH'].str.split(' ')
+        df_super_past['Hệ thống'] = df_super_past['Hệ thống'].agg({lambda x: x[0]})
+        df_super_past['Hệ thống'] = df_super_past['Hệ thống'].map({
+                    'VMP': 'Vincommerce',
+                    'VM': 'Vincommerce',
+                    'BHX': 'Bách Hóa Xanh',
+                    'Lotte': 'Lotte mart',
+                    'MM': 'Mega Market',
+                    'Coopmart': 'Sài Gòn Coop',
+                    'Coopfood': 'Sài Gòn Coop',
+                    'BigC': 'BigC và Go!',
+                    'CK': 'Circle K',
+                    'FM': 'Family Mart',
+                    'MN': 'Ministop',
+                    'GS25': 'GS25',
+                })
+        df_super_past = df_super_past.groupby('Hệ thống').agg({'Thành tiền': 'sum'}).reset_index()
+        df_super_past = df_super_past.rename(columns = {'Thành tiền': 'Thành tiền (quá khứ)'})
 
+        df_supermarket = df_super.set_index('Hệ thống').join(df_super_past.set_index('Hệ thống')).reset_index()
+        df_supermarket['Tăng trưởng'] = (df_supermarket['Thành tiền (hiện tại)'] - df_supermarket['Thành tiền (quá khứ)']) / df_supermarket['Thành tiền (quá khứ)']
+        df_supermarket['Tăng trưởng'] = round(df_supermarket['Tăng trưởng'], 2) * 100
+        st.table(df_supermarket)
+        barSuper = px.bar(df_supermarket, x = df_supermarket['Hệ thống'], y = df_supermarket['Tăng trưởng'])
+        st.plotly_chart(barSuper, use_container_width = True)
+
+
+
+    ##################################
 
