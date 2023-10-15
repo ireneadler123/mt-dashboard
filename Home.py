@@ -460,7 +460,7 @@ elif pages == 'Tăng trưởng lũy kế':
     with middle:
         if kind == 'QTD - YOY %':
             # df_past = df1[df1['Hệ thống'] == supermarket]
-            df_past = df[(pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64[ns]'), dayfirst = True) >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'].astype('datetime64[ns]'), dayfirst = True) <= (date2 - timedelta(days = 365)))]
+            df_past = df[(pd.to_datetime(df['Ngày lấy đơn'], dayfirst = True) >= (date1 - timedelta(days = 365))) & (pd.to_datetime(df['Ngày lấy đơn'], dayfirst = True) <= (date2 - timedelta(days = 365)))]
             df_past['Ngày lấy đơn'] = df_past['Ngày lấy đơn'].astype('str').str.split(' ')
             df_past['Ngày lấy đơn'] = df_past['Ngày lấy đơn'].agg({lambda x: x[0]})
             quality = df1[(pd.to_datetime(df1['Ngày lấy đơn'], dayfirst = True) >= date1) & (pd.to_datetime(df1['Ngày lấy đơn'], dayfirst = True) <= date2)].copy()
